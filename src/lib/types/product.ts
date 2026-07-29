@@ -1,0 +1,23 @@
+export type StorefrontProduct = {
+  id: string;
+  slug: string;
+  name: string;
+  price: number;
+  rating: number;
+  ratingDisplay: string;
+  reviews: number;
+  category: string;
+  categorySlug: string;
+  image: string;
+  hoverImage?: string;
+  gallery: string[];
+  colors: string[];
+  colorOptions: { name: string; hex: string }[];
+  features: string[];
+  bullets: { icon: string; text: string }[];
+  story: { title: string; body: string; image: string };
+  specs: { label: string; value: string }[];
+  inTheBox: { icon: string; text: string }[];
+  badge?: string;
+  featured?: boolean;
+};

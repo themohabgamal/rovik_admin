@@ -1,36 +1,61 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Rovik Admin
 
-## Getting Started
+Next.js admin dashboard for the Rovik monitor light-bar storefront (Supabase-backed).
 
-First, run the development server:
+## Setup
+
+1. Copy env vars:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env.local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Fill in:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Do **not** put `SUPABASE_SERVICE_ROLE_KEY` in this app. Admin writes use the anon key + authenticated session (RLS must allow authenticated users).
 
-## Learn More
+2. Install and run:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm install
+npm run dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Open [http://localhost:3000/admin/login](http://localhost:3000/admin/login).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Create an admin user
 
-## Deploy on Vercel
+1. In the [Supabase Dashboard](https://supabase.com/dashboard) → **Authentication** → **Users**.
+2. Click **Add user** → **Create new user**.
+3. Enter email + password (enable "Auto Confirm User" if available).
+4. Sign in at `/admin/login` with that email and password.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Only authenticated users can access `/admin/*` (middleware + layout checks).
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Storage
+
+Product images upload to the public `product-images` bucket at:
+
+`product-images/{product-slug}/{filename}`
+
+Ensure the bucket exists and authenticated users can upload; public read is fine for storefront URLs.
+
+## Routes
+
+| Path | Purpose |
+|------|---------|
+| `/admin` | Dashboard counts + recent waitlist |
+| `/admin/categories` | Categories CRUD |
+| `/admin/products` | Products list / filters |
+| `/admin/products/new` | Create product |
+| `/admin/products/[id]` | Edit product |
+| `/admin/waitlist` | Waitlist + CSV export |
+| `/admin/settings` | `site_settings` id=`main` |
+| `/admin/login` | Email/password auth |
+
+## Storefront mapping
+
+`src/lib/mappers/product.ts` maps DB snake_case rows to the storefront `Product` shape (`ratingDisplay`, `colorOptions`, `inTheBox`, `story`, etc.).
