@@ -1,5 +1,10 @@
 import { createClient } from "@/lib/supabase/client";
 
+function publicUrl(path: string) {
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "");
+  return `${base}/storage/v1/object/public/product-images/${path}`;
+}
+
 export async function uploadProductImage(
   productSlug: string,
   file: File
@@ -13,12 +18,7 @@ export async function uploadProductImage(
     .upload(path, file, { cacheControl: "3600", upsert: false });
 
   if (error) return { url: "", error: error.message };
-
-  const {
-    data: { publicUrl },
-  } = supabase.storage.from("product-images").getPublicUrl(path);
-
-  return { url: publicUrl };
+  return { url: publicUrl(path) };
 }
 
 export async function uploadSiteImage(
@@ -33,10 +33,5 @@ export async function uploadSiteImage(
     .upload(path, file, { cacheControl: "3600", upsert: false });
 
   if (error) return { url: "", error: error.message };
-
-  const {
-    data: { publicUrl },
-  } = supabase.storage.from("product-images").getPublicUrl(path);
-
-  return { url: publicUrl };
+  return { url: publicUrl(path) };
 }

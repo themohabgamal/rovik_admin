@@ -97,13 +97,13 @@ export function Field({
 }
 
 export const inputClass =
-  "w-full rounded-md border border-border bg-white px-3 py-2 text-sm outline-none focus:border-primary";
+  "w-full rounded-xl border border-black/15 bg-white px-3 py-2 text-sm outline-none focus:border-primary";
 
 export const btnPrimary =
-  "inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover disabled:opacity-50";
+  "inline-flex items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover disabled:opacity-50";
 
 export const btnSecondary =
-  "inline-flex items-center justify-center rounded-md border border-border bg-white px-4 py-2 text-sm hover:bg-background disabled:opacity-50";
+  "inline-flex items-center justify-center rounded-xl border border-black bg-white px-4 py-2 text-sm hover:bg-black hover:text-white disabled:opacity-50";
 
 export const btnDanger =
-  "inline-flex items-center justify-center rounded-md bg-danger px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50";
+  "inline-flex items-center justify-center rounded-xl bg-black px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50";

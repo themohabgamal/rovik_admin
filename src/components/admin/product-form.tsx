@@ -25,12 +25,16 @@ import {
   btnPrimary,
   btnSecondary,
 } from "@/components/admin/ui";
+import { ProductCostPanel } from "@/components/admin/product-cost-panel";
+import type { ExpenseCurrency } from "@/lib/product-cost";
 
 type FormState = {
   name: string;
   slug: string;
   category_id: string;
   price: string;
+  cost: string;
+  cost_currency: ExpenseCurrency;
   badge: string;
   featured: boolean;
   is_active: boolean;
@@ -58,6 +62,8 @@ const empty: FormState = {
   slug: "",
   category_id: "",
   price: "",
+  cost: "",
+  cost_currency: "EGP",
   badge: "",
   featured: false,
   is_active: true,
@@ -86,6 +92,8 @@ function rowToForm(row: ProductRow): FormState {
     slug: row.slug,
     category_id: row.category_id ?? "",
     price: String(row.price ?? ""),
+    cost: row.cost == null ? "" : String(row.cost),
+    cost_currency: row.cost_currency === "EGP" ? "EGP" : "USD",
     badge: row.badge ?? "",
     featured: row.featured,
     is_active: row.is_active,
@@ -192,6 +200,8 @@ export function ProductForm({ productId }: { productId?: string }) {
       next.slug = "Use lowercase kebab-case";
     if (!form.price.trim() || Number.isNaN(Number(form.price)))
       next.price = "Enter a valid price in EGP";
+    if (form.cost.trim() && (Number.isNaN(Number(form.cost)) || Number(form.cost) < 0))
+      next.cost = "Enter a valid base cost";
     setErrors(next);
     return Object.keys(next).length === 0;
   }
@@ -207,6 +217,8 @@ export function ProductForm({ productId }: { productId?: string }) {
       slug: form.slug.trim(),
       category_id: form.category_id || null,
       price: Number(form.price),
+      cost: form.cost.trim() === "" ? null : Number(form.cost),
+      cost_currency: form.cost_currency,
       currency: "EGP",
       badge: form.badge.trim() || null,
       featured: form.featured,
@@ -233,17 +245,33 @@ export function ProductForm({ productId }: { productId?: string }) {
     };
 
     const supabase = createClient();
-    const result = productId
-      ? await supabase.from("products").update(payload).eq("id", productId)
-      : await supabase.from("products").insert(payload);
+    if (productId) {
+      const result = await supabase
+        .from("products")
+        .update(payload)
+        .eq("id", productId);
+      setBusy(false);
+      if (result.error) {
+        toast(result.error.message, "error");
+        return;
+      }
+      toast("Product saved");
+      router.refresh();
+      return;
+    }
 
+    const result = await supabase
+      .from("products")
+      .insert(payload)
+      .select("id")
+      .single();
     setBusy(false);
     if (result.error) {
       toast(result.error.message, "error");
       return;
     }
-    toast(productId ? "Product saved" : "Product created");
-    router.push("/admin/products");
+    toast("Product created — add expenses below");
+    router.push(`/admin/products/${result.data.id}`);
     router.refresh();
   }
 
@@ -387,6 +415,55 @@ export function ProductForm({ productId }: { productId?: string }) {
           </div>
         </div>
       </Card>
+
+      {productId ? (
+        <ProductCostPanel
+          productId={productId}
+          sellingPrice={Number(form.price) || 0}
+          baseCost={form.cost.trim() === "" ? null : Number(form.cost)}
+          costCurrency={form.cost_currency}
+          onBaseCostChange={(cost, currency) =>
+            patch({
+              cost: cost == null || Number.isNaN(cost) ? "" : String(cost),
+              cost_currency: currency,
+            })
+          }
+        />
+      ) : (
+        <Card>
+          <h3 className="mb-3 text-sm font-semibold">Base product cost</h3>
+          <p className="mb-4 text-xs text-muted">
+            Save the product first to add customs, shipping, and other allocated
+            expenses.
+          </p>
+          <div className="grid gap-4 md:grid-cols-2">
+            <Field label="Base cost" error={errors.cost}>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                className={inputClass}
+                value={form.cost}
+                onChange={(e) => patch({ cost: e.target.value })}
+              />
+            </Field>
+            <Field label="Base cost currency">
+              <select
+                className={inputClass}
+                value={form.cost_currency}
+                onChange={(e) =>
+                  patch({
+                    cost_currency: e.target.value as ExpenseCurrency,
+                  })
+                }
+              >
+                <option value="USD">USD</option>
+                <option value="EGP">EGP</option>
+              </select>
+            </Field>
+          </div>
+        </Card>
+      )}
 
       <Card>
         <h3 className="mb-4 text-sm font-semibold">Images</h3>

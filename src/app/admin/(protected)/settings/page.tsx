@@ -21,6 +21,7 @@ export default function SettingsPage() {
   const [heroImageUrl, setHeroImageUrl] = useState("");
   const [announcement, setAnnouncement] = useState("");
   const [pressLogos, setPressLogos] = useState<string[]>([]);
+  const [usdEgpRate, setUsdEgpRate] = useState("50.25");
   const [logoInput, setLogoInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -44,6 +45,9 @@ export default function SettingsPage() {
       setHeroImageUrl(data.hero_image_url ?? "");
       setAnnouncement(data.default_announcement ?? "");
       setPressLogos(data.press_logos ?? []);
+      setUsdEgpRate(
+        data.usd_egp_rate != null ? String(data.usd_egp_rate) : "50.25"
+      );
     }
   }
 
@@ -64,6 +68,11 @@ export default function SettingsPage() {
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
+    const rate = Number(usdEgpRate);
+    if (!Number.isFinite(rate) || rate <= 0) {
+      toast("Enter a valid USD → EGP exchange rate", "error");
+      return;
+    }
     setBusy(true);
     const supabase = createClient();
     const { error: err } = await supabase.from("site_settings").upsert({
@@ -71,6 +80,7 @@ export default function SettingsPage() {
       hero_image_url: heroImageUrl.trim() || null,
       default_announcement: announcement.trim() || null,
       press_logos: pressLogos,
+      usd_egp_rate: rate,
       updated_at: new Date().toISOString(),
     });
     setBusy(false);
@@ -97,6 +107,20 @@ export default function SettingsPage() {
       />
 
       <Card className="space-y-4">
+        <Field
+          label="USD → EGP exchange rate"
+          hint="Used to convert product costs and expenses into EGP for profit"
+        >
+          <input
+            type="number"
+            min="0.0001"
+            step="0.0001"
+            className={inputClass}
+            value={usdEgpRate}
+            onChange={(e) => setUsdEgpRate(e.target.value)}
+          />
+        </Field>
+
         <Field label="Hero image">
           <input
             type="file"

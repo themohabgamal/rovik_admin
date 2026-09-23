@@ -1,48 +1,39 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { logoutAction } from "@/app/admin/actions";
+import { OrderWatcher } from "@/components/admin/order-watcher";
 
 const NAV = [
   { href: "/admin", label: "Dashboard", exact: true },
+  { href: "/admin/orders", label: "Orders" },
+  { href: "/admin/coupons", label: "Coupons" },
+  { href: "/admin/import-orders", label: "Import costs" },
   { href: "/admin/categories", label: "Categories" },
   { href: "/admin/products", label: "Products" },
   { href: "/admin/waitlist", label: "Waitlist" },
   { href: "/admin/settings", label: "Settings" },
 ];
 
-export function AdminShell({
-  children,
-  email,
-}: {
-  children: React.ReactNode;
-  email?: string;
-}) {
+export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [loggingOut, setLoggingOut] = useState(false);
-
-  async function logout() {
-    setLoggingOut(true);
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    router.push("/admin/login");
-    router.refresh();
-  }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-white text-black">
       <div className="flex min-h-screen">
         <aside
-          className={`fixed inset-y-0 left-0 z-40 w-60 border-r border-border bg-sidebar transition-transform lg:static lg:translate-x-0 ${
+          className={`fixed inset-y-0 left-0 z-40 w-60 bg-black text-white transition-transform lg:static lg:translate-x-0 ${
             open ? "translate-x-0" : "-translate-x-full"
           }`}
         >
-          <div className="flex h-14 items-center border-b border-border px-5">
-            <span className="text-sm font-semibold tracking-wide">Rovik</span>
+          <div className="flex h-14 items-center gap-2 border-b border-white/10 px-5">
+            <img src="/rovik-logo.png" alt="" width={28} height={28} className="h-7 w-7" />
+            <span className="text-sm font-semibold tracking-wide">
+              Rovik <span className="text-primary">Admin</span>
+            </span>
           </div>
           <nav className="flex flex-col gap-1 p-3">
             {NAV.map((item) => {
@@ -54,10 +45,10 @@ export function AdminShell({
                   key={item.href}
                   href={item.href}
                   onClick={() => setOpen(false)}
-                  className={`rounded-md px-3 py-2 text-sm transition ${
+                  className={`rounded-xl px-3 py-2 text-sm transition ${
                     active
                       ? "bg-primary text-white"
-                      : "text-foreground/80 hover:bg-white"
+                      : "text-white/80 hover:bg-white/10"
                   }`}
                 >
                   {item.label}
@@ -71,40 +62,45 @@ export function AdminShell({
           <button
             type="button"
             aria-label="Close menu"
-            className="fixed inset-0 z-30 bg-black/30 lg:hidden"
+            className="fixed inset-0 z-30 bg-black/40 lg:hidden"
             onClick={() => setOpen(false)}
           />
         )}
 
-        <div className="flex min-w-0 flex-1 flex-col">
-          <header className="flex h-14 items-center justify-between border-b border-border bg-card px-4 lg:px-6">
+        <div className="flex min-w-0 flex-1 flex-col bg-white">
+          <header className="flex h-14 items-center justify-between border-b border-border bg-white px-4 lg:px-6">
             <div className="flex items-center gap-3">
               <button
                 type="button"
-                className="rounded-md border border-border px-2 py-1 text-sm lg:hidden"
+                className="rounded-xl border border-black px-2 py-1 text-sm lg:hidden"
                 onClick={() => setOpen(true)}
               >
                 Menu
               </button>
-              <h1 className="text-sm font-semibold">Rovik Admin</h1>
+              <h1 className="flex items-center gap-2 text-sm font-semibold">
+                <img
+                  src="/rovik-logo.png"
+                  alt=""
+                  width={24}
+                  height={24}
+                  className="h-6 w-6 lg:hidden"
+                />
+                Rovik Admin
+              </h1>
             </div>
-            <div className="flex items-center gap-3">
-              {email && (
-                <span className="hidden text-xs text-muted sm:inline">
-                  {email}
-                </span>
-              )}
+            <form action={logoutAction}>
               <button
-                type="button"
-                onClick={logout}
-                disabled={loggingOut}
-                className="rounded-md border border-border px-3 py-1.5 text-xs hover:bg-background disabled:opacity-50"
+                type="submit"
+                className="rounded-xl border border-black px-3 py-1.5 text-xs hover:bg-black hover:text-white"
               >
-                {loggingOut ? "…" : "Logout"}
+                Sign out
               </button>
-            </div>
+            </form>
           </header>
-          <main className="flex-1 p-4 lg:p-6">{children}</main>
+          <main className="flex-1 p-4 lg:p-6">
+            <OrderWatcher />
+            {children}
+          </main>
         </div>
       </div>
     </div>
