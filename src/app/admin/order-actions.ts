@@ -58,6 +58,81 @@ export async function markShipped(
   return { ok: true };
 }
 
+export async function markOrderReceived(
+  _prev: { error?: string; ok?: boolean } | null,
+  formData: FormData
+) {
+  const orderId = String(formData.get("id") ?? "");
+  if (!orderId) return { error: "Missing order" };
+
+  const supabase = createAdminClient();
+  const { error } = await supabase
+    .from("orders")
+    .update({ status: "received" })
+    .eq("id", orderId);
+  if (error) return { error: error.message };
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/orders");
+  revalidatePath("/admin/order-making");
+  revalidatePath(`/admin/orders/${orderId}`);
+  return { ok: true };
+}
+
+/**
+ * Admin confirmed delivery/shipping fees were paid → order confirmed + email.
+ */
+export async function confirmShippingFeeReceived(
+  _prev: { error?: string; ok?: boolean; emailOk?: boolean } | null,
+  formData: FormData
+) {
+  const orderId = String(formData.get("id") ?? "");
+  if (!orderId) return { error: "Missing order" };
+
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("orders")
+    .select("*")
+    .eq("id", orderId)
+    .single();
+  if (error || !data) return { error: error?.message ?? "Order not found" };
+
+  const order = mapOrder(data);
+  if (!order) return { error: "Order not found" };
+
+  const trackingToken = order.trackingToken || randomUUID();
+  const { error: updateError } = await supabase
+    .from("orders")
+    .update({
+      status: "confirmed",
+      shipping_payment_status: "paid",
+      shipping_paid_at: order.finance.shippingPaidAt || new Date().toISOString(),
+      tracking_token: trackingToken,
+    })
+    .eq("id", orderId);
+  if (updateError) return { error: updateError.message };
+
+  const email = await sendOrderEmail(
+    { ...order, trackingToken, status: "confirmed" },
+    "confirmed"
+  );
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/orders");
+  revalidatePath("/admin/order-making");
+  revalidatePath(`/admin/orders/${orderId}`);
+  if (trackingToken) revalidatePath(`/track/${trackingToken}`);
+
+  if (!email.ok) {
+    return {
+      ok: true,
+      emailOk: false,
+      error: `Order confirmed, but email failed: ${email.error}`,
+    };
+  }
+  return { ok: true, emailOk: true };
+}
+
 export async function markConfirmed(
   _prev: { error?: string; ok?: boolean } | null,
   formData: FormData
@@ -73,6 +148,7 @@ export async function markConfirmed(
   if (error) return { error: error.message };
   revalidatePath("/admin");
   revalidatePath("/admin/orders");
+  revalidatePath("/admin/order-making");
   return { ok: true };
 }
 

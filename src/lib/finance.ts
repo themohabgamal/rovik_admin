@@ -49,6 +49,7 @@ export type MoneySnapshot = {
 
 export const ORDER_STATUSES: OrderStatus[] = [
   "pending",
+  "received",
   "confirmed",
   "preparing",
   "shipped",
@@ -63,6 +64,7 @@ export const ORDER_STATUSES: OrderStatus[] = [
 
 export const STATUS_LABELS: Record<OrderStatus, string> = {
   pending: "Pending",
+  received: "Received",
   confirmed: "Confirmed",
   preparing: "Preparing",
   shipped: "Shipped",
@@ -394,6 +396,7 @@ export function aggregateFinance(orders: Order[]): FinanceTotals {
     const snap = computeOrderMoney(order);
     const pendingLike = new Set<OrderStatus>([
       "pending",
+      "received",
       "confirmed",
       "preparing",
     ]);

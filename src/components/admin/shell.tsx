@@ -8,6 +8,7 @@ import { OrderWatcher } from "@/components/admin/order-watcher";
 
 const NAV = [
   { href: "/admin", label: "Dashboard", exact: true },
+  { href: "/admin/order-making", label: "Order making" },
   { href: "/admin/orders", label: "Orders" },
   { href: "/admin/coupons", label: "Coupons" },
   { href: "/admin/import-orders", label: "Stock" },

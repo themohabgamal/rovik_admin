@@ -1,5 +1,6 @@
 export type OrderStatus =
   | "pending"
+  | "received"
   | "confirmed"
   | "preparing"
   | "shipped"
@@ -172,6 +173,7 @@ function parseItems(raw: unknown): OrderLine[] {
 
 const STATUS_SET = new Set<OrderStatus>([
   "pending",
+  "received",
   "confirmed",
   "preparing",
   "shipped",
@@ -188,7 +190,8 @@ export function normalizeStatus(raw: string): OrderStatus {
   const value = raw.trim().toLowerCase().replace(/[\s-]+/g, "_");
   if (STATUS_SET.has(value as OrderStatus)) return value as OrderStatus;
   if (value === "out for delivery") return "out_for_delivery";
-  return "confirmed";
+  if (value === "new") return "pending";
+  return "pending";
 }
 
 function mapFinance(row: Record<string, unknown>): OrderFinance {

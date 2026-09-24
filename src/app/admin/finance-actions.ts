@@ -127,7 +127,7 @@ export async function updateOrderStatus(
     patch.cancelled_at = order.finance.cancelledAt || now;
     patch.financial_status = "cancelled";
   }
-  if (status === "confirmed" || status === "pending" || status === "preparing") {
+  if (status === "confirmed" || status === "pending" || status === "preparing" || status === "received") {
     // keep shipped_at if already set unless explicitly clearing via old flow
   }
 

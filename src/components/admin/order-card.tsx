@@ -3,13 +3,16 @@
 import Link from "next/link";
 import { useActionState } from "react";
 import {
+  confirmShippingFeeReceived,
   markConfirmed,
+  markOrderReceived,
   markShipped,
   sendOrderConfirmedEmail,
   sendOrderShippedEmail,
 } from "@/app/admin/order-actions";
 import { computeOrderMoney, formatSignedEgp, STATUS_LABELS } from "@/lib/finance";
 import { formatDate, formatEgp, type Order } from "@/lib/orders";
+import { customerShippingFeeWhatsAppUrl, customerWhatsAppChatUrl } from "@/lib/whatsapp";
 import { SubmitButton } from "@/components/admin/submit-button";
 
 function statusClass(status: Order["status"]) {
@@ -20,6 +23,7 @@ function statusClass(status: Order["status"]) {
   if (status === "returned" || status === "cancelled" || status === "delivery_failed") {
     return "border border-black text-black";
   }
+  if (status === "received") return "border border-primary text-primary";
   return "border border-border text-black";
 }
 
@@ -32,6 +36,8 @@ export function OrderCard({
 }) {
   const [shipState, shipAction] = useActionState(markShipped, null);
   const [confirmState, confirmAction] = useActionState(markConfirmed, null);
+  const [receiveState, receiveAction] = useActionState(markOrderReceived, null);
+  const [feeState, feeAction] = useActionState(confirmShippingFeeReceived, null);
   const [emailState, emailAction] = useActionState(sendOrderShippedEmail, null);
   const [confirmEmailState, confirmEmailAction] = useActionState(
     sendOrderConfirmedEmail,
@@ -40,19 +46,30 @@ export function OrderCard({
   const error =
     shipState?.error ||
     confirmState?.error ||
+    receiveState?.error ||
+    feeState?.error ||
     emailState?.error ||
     confirmEmailState?.error;
   const shippedMail = emailState?.ok || (shipState?.ok && !shipState?.error);
-  const confirmedMail = confirmEmailState?.ok;
+  const confirmedMail =
+    confirmEmailState?.ok || (feeState?.ok && feeState.emailOk !== false);
   const money = computeOrderMoney(order);
+  const waUrl = customerShippingFeeWhatsAppUrl(order);
+  const chatUrl = customerWhatsAppChatUrl(order.phone);
   const canShip =
     order.status === "pending" ||
+    order.status === "received" ||
     order.status === "confirmed" ||
     order.status === "preparing";
   const canConfirm =
     order.status === "shipped" ||
     order.status === "out_for_delivery" ||
     order.status === "delivered";
+  const canMarkReceived = order.status === "pending";
+  const canConfirmFee =
+    order.status === "received" ||
+    (order.status === "confirmed" &&
+      order.finance.shippingPaymentStatus === "unpaid");
 
   return (
     <article
@@ -160,12 +177,46 @@ export function OrderCard({
       {error ? <p className="mt-3 text-sm text-danger">{error}</p> : null}
 
       <div className="mt-4 flex flex-wrap gap-2">
+        {chatUrl ? (
+          <a
+            href={chatUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="rounded-xl border border-[#25D366] px-4 py-2 text-sm font-medium text-[#128C7E] hover:bg-[#25D366]/10"
+          >
+            WA chat
+          </a>
+        ) : null}
         <Link
           href={`/admin/orders/${order.id}`}
           className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover"
         >
           Financials
         </Link>
+        {canMarkReceived ? (
+          <form action={receiveAction}>
+            <input type="hidden" name="id" value={order.id} />
+            <SubmitButton>Mark received</SubmitButton>
+          </form>
+        ) : null}
+        {canConfirmFee ? (
+          <>
+            {waUrl ? (
+              <a
+                href={waUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-xl bg-[#25D366] px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+              >
+                Ask shipping fee (WhatsApp)
+              </a>
+            ) : null}
+            <form action={feeAction}>
+              <input type="hidden" name="id" value={order.id} />
+              <SubmitButton>Fees received → Confirm + email</SubmitButton>
+            </form>
+          </>
+        ) : null}
         {canShip ? (
           <>
             <form action={shipAction}>
