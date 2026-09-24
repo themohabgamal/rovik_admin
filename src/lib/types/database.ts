@@ -174,6 +174,7 @@ export type ImportOrderRow = {
   supplier_name: string | null;
   order_date: string | null;
   status: "draft" | "completed";
+  stock_type?: "import" | "local" | null;
   exchange_rate: number;
   international_shipping_usd: number;
   products: Json;
@@ -337,6 +338,7 @@ export type Database = {
           supplier_name?: string | null;
           order_date?: string | null;
           status?: "draft" | "completed";
+          stock_type?: "import" | "local";
           exchange_rate?: number;
           international_shipping_usd?: number;
           products?: Json;
@@ -350,6 +352,7 @@ export type Database = {
           supplier_name?: string | null;
           order_date?: string | null;
           status?: "draft" | "completed";
+          stock_type?: "import" | "local";
           exchange_rate?: number;
           international_shipping_usd?: number;
           products?: Json;

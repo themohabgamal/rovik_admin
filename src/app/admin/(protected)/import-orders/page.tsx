@@ -8,6 +8,7 @@ import {
   formatEgp,
   parseExpensesJson,
   parseProductsJson,
+  parseStockType,
 } from "@/lib/import-calculator";
 import type { ImportOrderRow } from "@/lib/types/database";
 import { useToast } from "@/components/admin/toast";
@@ -63,18 +64,18 @@ export default function ImportOrdersPage() {
       toast(err.message, "error");
       return;
     }
-    toast("Import order deleted");
+    toast("Stock deleted");
     void load();
   }
 
   return (
     <div>
       <PageHeader
-        title="Import cost calculator"
-        description="Track landed cost for China import orders before adding profit."
+        title="Stock"
+        description="What each unit costs you — imported shipments or local stock with packaging, ads, and other expenses."
         actions={
           <Link href="/admin/import-orders/new" className={btnPrimary}>
-            New import order
+            Add stock
           </Link>
         }
       />
@@ -82,7 +83,7 @@ export default function ImportOrdersPage() {
       {loading && <LoadingState />}
       {!loading && error && <ErrorState message={error} onRetry={load} />}
       {!loading && !error && rows.length === 0 && (
-        <EmptyState message="No import orders yet. Create your first shipment calculator." />
+        <EmptyState message="No stock batches yet. Add an import shipment or local items." />
       )}
 
       {!loading && !error && rows.length > 0 && (
@@ -90,18 +91,21 @@ export default function ImportOrdersPage() {
           <table className="w-full text-left text-sm">
             <thead>
               <tr className="border-b border-border text-xs text-muted">
-                <th className="px-4 py-3 font-medium">Order</th>
-                <th className="px-4 py-3 font-medium">Supplier</th>
+                <th className="px-4 py-3 font-medium">Name</th>
+                <th className="px-4 py-3 font-medium">Type</th>
+                <th className="px-4 py-3 font-medium">Source</th>
                 <th className="px-4 py-3 font-medium">Date</th>
-                <th className="px-4 py-3 font-medium">Rate</th>
-                <th className="px-4 py-3 font-medium">Grand total</th>
+                <th className="px-4 py-3 font-medium">Total cost</th>
+                <th className="px-4 py-3 font-medium">Avg / unit</th>
                 <th className="px-4 py-3 font-medium">Status</th>
                 <th className="px-4 py-3 font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((row) => {
+                const stockType = parseStockType(row.stock_type);
                 const calc = calculateImportOrder({
+                  stockType,
                   exchangeRate: row.exchange_rate,
                   internationalShippingUsd: row.international_shipping_usd,
                   products: parseProductsJson(row.products),
@@ -110,15 +114,24 @@ export default function ImportOrdersPage() {
                 return (
                   <tr key={row.id} className="border-b border-border/60">
                     <td className="px-4 py-3 font-medium">{row.name}</td>
-                    <td className="px-4 py-3 text-muted">{row.supplier_name ?? "—"}</td>
+                    <td className="px-4 py-3">
+                      <span className="rounded-full border border-border px-2.5 py-1 text-xs">
+                        {stockType === "local" ? "Local" : "Imported"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-muted">
+                      {row.supplier_name ?? "—"}
+                    </td>
                     <td className="px-4 py-3 text-muted">
                       {row.order_date
                         ? new Date(row.order_date).toLocaleDateString()
                         : "—"}
                     </td>
-                    <td className="px-4 py-3 tabular-nums">{row.exchange_rate}</td>
                     <td className="px-4 py-3 tabular-nums">
                       {formatEgp(calc.grandTotalLandedEgp)}
+                    </td>
+                    <td className="px-4 py-3 font-medium tabular-nums text-primary">
+                      {formatEgp(calc.averageCostPerUnitEgp)}
                     </td>
                     <td className="px-4 py-3">
                       <span
@@ -158,7 +171,7 @@ export default function ImportOrdersPage() {
 
       <ConfirmModal
         open={!!deleteTarget}
-        title="Delete import order?"
+        title="Delete stock?"
         message={`Remove "${deleteTarget?.name}"? This cannot be undone.`}
         confirmLabel="Delete"
         danger

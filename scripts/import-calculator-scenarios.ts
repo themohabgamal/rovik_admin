@@ -6,12 +6,13 @@ import {
 } from "../src/lib/import-calculator";
 
 const example: ImportOrderInput = {
+  stockType: "import",
   exchangeRate: 50.25,
   internationalShippingUsd: 219,
   products: [
-    { id: "1", label: "30cm", quantity: 50, unitPriceUsd: 3.2, sortOrder: 0 },
-    { id: "2", label: "40cm", quantity: 3, unitPriceUsd: 2.5, sortOrder: 1 },
-    { id: "3", label: "44cm", quantity: 3, unitPriceUsd: 2.5, sortOrder: 2 },
+    { id: "1", label: "30cm", quantity: 50, unitPriceUsd: 3.2, unitCostEgp: 0, sortOrder: 0 },
+    { id: "2", label: "40cm", quantity: 3, unitPriceUsd: 2.5, unitCostEgp: 0, sortOrder: 1 },
+    { id: "3", label: "44cm", quantity: 3, unitPriceUsd: 2.5, unitCostEgp: 0, sortOrder: 2 },
   ],
   expenses: [
     { id: "e1", name: "Local shipping", amount: 4000, currency: "EGP" },
@@ -54,3 +55,28 @@ console.log(
   "30cm per unit:",
   calc.products.find((row) => row.label === "30cm")?.finalCostPerUnitEgp
 );
+
+const local = calculateImportOrder({
+  stockType: "local",
+  exchangeRate: 50.25,
+  internationalShippingUsd: 0,
+  products: [
+    {
+      id: "l1",
+      label: "Light Bar",
+      quantity: 10,
+      unitPriceUsd: 0,
+      unitCostEgp: 100,
+      sortOrder: 0,
+    },
+  ],
+  expenses: [
+    { id: "p1", name: "Packaging", amount: 50, currency: "EGP" },
+    { id: "a1", name: "Ads", amount: 150, currency: "EGP" },
+  ],
+});
+assert.equal(local.totalProductCostEgp, 1000);
+assert.equal(local.totalAdditionalExpensesEgp, 200);
+assert.equal(local.grandTotalLandedEgp, 1200);
+assert.equal(local.products[0]?.finalCostPerUnitEgp, 120);
+console.log("Local stock scenarios passed — cost/unit:", local.products[0]?.finalCostPerUnitEgp);

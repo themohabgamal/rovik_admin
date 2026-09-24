@@ -10,7 +10,7 @@ const NAV = [
   { href: "/admin", label: "Dashboard", exact: true },
   { href: "/admin/orders", label: "Orders" },
   { href: "/admin/coupons", label: "Coupons" },
-  { href: "/admin/import-orders", label: "Import costs" },
+  { href: "/admin/import-orders", label: "Stock" },
   { href: "/admin/categories", label: "Categories" },
   { href: "/admin/products", label: "Products" },
   { href: "/admin/waitlist", label: "Waitlist" },
