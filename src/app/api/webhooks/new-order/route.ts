@@ -1,7 +1,5 @@
 import { NextRequest } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { mapOrder } from "@/lib/orders";
-import { notifyNewOrderWhatsApp } from "@/lib/notify-whatsapp";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -35,7 +33,7 @@ export async function POST(request: NextRequest) {
   const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("orders")
-    .select("*")
+    .select("id, wa_notified_at")
     .eq("id", orderId)
     .maybeSingle();
 
@@ -46,19 +44,6 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (data.wa_notified_at) {
-    return Response.json({ ok: true, skipped: true, reason: "already_notified" });
-  }
-
-  const order = mapOrder(data);
-  if (!order) {
-    return Response.json({ error: "Could not map order" }, { status: 500 });
-  }
-
-  const result = await notifyNewOrderWhatsApp(order);
-  if (!result.ok) {
-    return Response.json({ error: result.error }, { status: 502 });
-  }
-
-  return Response.json({ ok: true, order_number: order.orderNumber });
+  // Outbound WhatsApp (CallMeBot) removed from admin — front app owns alerts.
+  return Response.json({ ok: true, skipped: true, reason: "whatsapp_disabled" });
 }
