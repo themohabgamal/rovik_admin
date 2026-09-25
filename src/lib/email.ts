@@ -1,5 +1,5 @@
 import type { Order, OrderLine } from "@/lib/orders";
-import { formatEgp } from "@/lib/orders";
+import { formatEgp, orderLineMeta } from "@/lib/orders";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export function siteUrl() {
@@ -101,6 +101,13 @@ function itemRows(items: OrderLine[]) {
               <td style="padding:8px 12px 8px 0;width:64px;vertical-align:top">${img}</td>
               <td style="padding:8px 0;font-size:14px;color:#111;vertical-align:top">
                 ${item.quantity}× ${esc(item.name)}
+                ${
+                  orderLineMeta(item).length
+                    ? `<div style="margin-top:4px;font-size:12px;color:#888">${orderLineMeta(item)
+                        .map((v) => esc(v))
+                        .join(" · ")}</div>`
+                    : ""
+                }
               </td>
               <td style="padding:8px 0 8px 12px;font-size:14px;color:#111;text-align:right;white-space:nowrap;vertical-align:top">
                 ${formatEgp(item.price * item.quantity)}

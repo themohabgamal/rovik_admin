@@ -18,6 +18,7 @@ import {
   ETISALAT_CASH_DISPLAY,
   shippingFeeWhatsAppMessage,
 } from "@/lib/whatsapp";
+import { OrderLineLabel } from "@/components/admin/order-line-label";
 
 type Stage = "needs_receive" | "awaiting_fee" | "done_pipeline";
 
@@ -179,10 +180,8 @@ function OrderMakingCard({
       <ul className="mt-3 space-y-1 border-t border-border pt-3 text-sm">
         {order.items.map((item, i) => (
           <li key={`${item.slug}-${i}`} className="flex justify-between gap-2">
-            <span>
-              {item.quantity}× {item.name}
-            </span>
-            <span className="tabular-nums">
+            <OrderLineLabel item={item} />
+            <span className="shrink-0 tabular-nums">
               {formatEgp(item.price * item.quantity)}
             </span>
           </li>

@@ -9,6 +9,7 @@ import {
 } from "@/lib/product-cost";
 import { STATUS_LABELS } from "@/lib/finance";
 import { OrderFinancePanel } from "@/components/admin/order-finance-panel";
+import { OrderLineLabel } from "@/components/admin/order-line-label";
 import { PageHeader, Card } from "@/components/admin/ui";
 import { listOrderTransactions } from "@/app/admin/finance-actions";
 
@@ -122,7 +123,7 @@ export default async function OrderDetailPage({
                     />
                   ) : null}
                   <span>
-                    {item.quantity}× {item.name}
+                    <OrderLineLabel item={item} />
                   </span>
                 </span>
                 <span>{formatEgp(item.price * item.quantity)}</span>

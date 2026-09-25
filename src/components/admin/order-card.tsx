@@ -13,6 +13,7 @@ import {
 import { computeOrderMoney, formatSignedEgp, STATUS_LABELS } from "@/lib/finance";
 import { formatDate, formatEgp, type Order } from "@/lib/orders";
 import { customerShippingFeeWhatsAppUrl, customerWhatsAppChatUrl } from "@/lib/whatsapp";
+import { OrderLineLabel } from "@/components/admin/order-line-label";
 import { SubmitButton } from "@/components/admin/submit-button";
 
 function statusClass(status: Order["status"]) {
@@ -139,7 +140,7 @@ export function OrderCard({
                   />
                 ) : null}
                 <span>
-                  {item.quantity}× {item.name}
+                  <OrderLineLabel item={item} />
                 </span>
               </span>
               <span className="shrink-0">{formatEgp(item.price * item.quantity)}</span>

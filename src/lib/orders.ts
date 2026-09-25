@@ -17,6 +17,8 @@ export type OrderLine = {
   slug: string;
   quantity: number;
   price: number;
+  size?: string;
+  color?: string;
   image?: string;
 };
 
@@ -161,14 +163,23 @@ function parseItems(raw: unknown): OrderLine[] {
   if (!Array.isArray(value)) return [];
   return value.map((item) => {
     const row = (item ?? {}) as Record<string, unknown>;
+    const size = str(row, ["size", "variant_size", "variantSize"]) || undefined;
+    const color = str(row, ["color", "colour", "color_name", "colorName"]) || undefined;
     return {
       name: str(row, ["name", "title", "product_name", "productName", "label"]),
       slug: str(row, ["slug", "product_slug", "productSlug"]),
       quantity: num(row, ["quantity", "qty", "count"]) || 1,
       price: num(row, ["price", "unit_price", "unitPrice", "amount", "total"]),
+      size,
+      color,
       image: str(row, ["image", "image_url", "imageUrl", "img", "thumbnail"]) || undefined,
     };
   });
+}
+
+/** Size / color chips for a line item (from place_order payload). */
+export function orderLineMeta(item: OrderLine) {
+  return [item.size, item.color].filter(Boolean) as string[];
 }
 
 const STATUS_SET = new Set<OrderStatus>([

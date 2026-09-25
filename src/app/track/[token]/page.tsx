@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { enrichItemsWithImages } from "@/lib/email";
 import { STATUS_LABELS } from "@/lib/finance";
-import { formatDate, formatEgp, mapOrder, type OrderStatus } from "@/lib/orders";
+import { formatDate, formatEgp, mapOrder, orderLineMeta, type OrderStatus } from "@/lib/orders";
 
 export const dynamic = "force-dynamic";
 
@@ -108,6 +108,18 @@ export default async function TrackPage({
                   ) : null}
                   <span>
                     {item.quantity}× {item.name}
+                    {orderLineMeta(item).length > 0 ? (
+                      <span className="mt-1 flex flex-wrap gap-1.5">
+                        {orderLineMeta(item).map((value) => (
+                          <span
+                            key={value}
+                            className="inline-flex rounded-full border border-border bg-background px-2 py-0.5 text-[11px] font-medium text-muted"
+                          >
+                            {value}
+                          </span>
+                        ))}
+                      </span>
+                    ) : null}
                   </span>
                 </span>
                 <span className="shrink-0">{formatEgp(item.price * item.quantity)}</span>
