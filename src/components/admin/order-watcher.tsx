@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { listOrders } from "@/app/admin/order-actions";
+import { listOrders, notifyNewOrdersWhatsApp } from "@/app/admin/order-actions";
 import { useToast } from "@/components/admin/toast";
 import {
   isSoundEnabled,
@@ -40,6 +40,8 @@ export function OrderWatcher() {
     incoming.forEach((o) => news.add(o.id));
     saveNewOrderIds(news);
     window.dispatchEvent(new Event("rovik-orders-updated"));
+
+    void notifyNewOrdersWhatsApp(incoming.map((o) => o.id));
 
     const played = await playNewOrderSound();
     if (!played) setSoundOn(false);

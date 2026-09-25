@@ -134,6 +134,7 @@ export type OrderRow = {
   cancelled_at: string | null;
   coupon_code: string | null;
   coupon_discount: number | null;
+  wa_notified_at?: string | null;
 };
 
 export type OrderTransactionRow = {

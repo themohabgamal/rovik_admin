@@ -229,3 +229,30 @@ export async function sendOrderConfirmedEmail(
   if (!email.ok) return { error: email.error };
   return { ok: true };
 }
+
+/** Backup path when admin tab detects new orders (also covered by DB webhook). */
+export async function notifyNewOrdersWhatsApp(orderIds: string[]) {
+  const store = await cookies();
+  if (!isValidSessionValue(store.get(ADMIN_COOKIE)?.value)) {
+    return { error: "Unauthorized", notified: 0 };
+  }
+  if (!orderIds.length) return { notified: 0 };
+
+  const { notifyNewOrderWhatsApp } = await import("@/lib/notify-whatsapp");
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("orders")
+    .select("*")
+    .in("id", orderIds)
+    .is("wa_notified_at", null);
+  if (error) return { error: error.message, notified: 0 };
+
+  let notified = 0;
+  for (const row of data ?? []) {
+    const order = mapOrder(row);
+    if (!order) continue;
+    const result = await notifyNewOrderWhatsApp(order);
+    if (result.ok) notified += 1;
+  }
+  return { notified };
+}
